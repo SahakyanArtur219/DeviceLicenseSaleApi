@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/DeviceLicenseSaleApi/.dotnet
+/DeviceLicenseSaleApi/.vs
+/DeviceLicenseSaleApi/bin/Debug
+/.vs
+/DeviceLicenseSaleApi/obj
