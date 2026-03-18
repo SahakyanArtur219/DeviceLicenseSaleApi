@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using DeviceLicenseSaleApi.DTOs;
 using DeviceLicenseSaleApi.Services;
-using DeviceLicenseSaleApi.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceLicenseSaleApi.Controllers
 {
@@ -16,27 +16,33 @@ namespace DeviceLicenseSaleApi.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetAll() => Ok(_service.GetAll());
+        public IActionResult GetAll()
+        {
+            return Ok(_service.GetAll());
+        }
 
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id) => Ok(_service.GetById(id));
+        [HttpGet("{id:int}")]
+        public IActionResult GetById(int id)
+        {
+            var features = _service.GetById(id);
+            return features == null ? NotFound() : Ok(features);
+        }
 
         [HttpPost]
-        public IActionResult Create([FromBody] Features entity)
+        public IActionResult Create([FromBody] CreateFeaturesDto dto)
         {
-            _service.Add(entity);
-            return Ok();
+            var created = _service.Add(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] Features entity)
+        [HttpPut("{id:int}")]
+        public IActionResult Update(int id, [FromBody] CreateFeaturesDto dto)
         {
-            entity.Id = id;
-            _service.Update(entity);
-            return Ok();
+            var updated = _service.Update(id, dto);
+            return updated ? Ok() : NotFound();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);
