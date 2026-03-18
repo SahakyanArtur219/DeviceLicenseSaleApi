@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
 using DeviceLicenseSaleApi.DTOs.Auth;
 using DeviceLicenseSaleApi.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceLicenseSaleApi.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -16,30 +18,36 @@ namespace DeviceLicenseSaleApi.Controllers
         }
 
         [HttpPost("register")]
-        public IActionResult Register(RegisterDto dto)
+        public ActionResult<AuthResponseDto> Register([FromBody] RegisterDto dto)
         {
             try
             {
-                var result = _service.Register(dto);
-                return Ok(result);
+                return Ok(_service.Register(dto));
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
         }
 
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public ActionResult<AuthResponseDto> Login([FromBody] LoginDto dto)
         {
             try
             {
-                var result = _service.Login(dto);
-                return Ok(result);
+                return Ok(_service.Login(dto));
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

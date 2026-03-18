@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using DeviceLicenseSaleApi.Services;
 using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceLicenseSaleApi.Controllers
 {
@@ -15,23 +16,28 @@ namespace DeviceLicenseSaleApi.Controllers
             _service = service;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult GetAll()
         {
             return Ok(_service.GetAll());
         }
 
-        [HttpGet("{id}")]
+        [AllowAnonymous]
+        [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
             var company = _service.GetById(id);
 
             if (company == null)
+            {
                 return NotFound();
+            }
 
             return Ok(company);
         }
 
+        [Authorize(Policy = "AdminOnly")]
         [HttpPost]
         public IActionResult Create([FromBody] CompanyCreateDto dto)
         {
@@ -39,14 +45,16 @@ namespace DeviceLicenseSaleApi.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPut("{id:int}")]
         public IActionResult Update(int id, [FromBody] CompanyUpdateDto dto)
         {
             _service.Update(id, dto);
             return Ok();
         }
 
-        [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);

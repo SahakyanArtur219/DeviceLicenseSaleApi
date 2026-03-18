@@ -1,88 +1,97 @@
-﻿using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.Data;
+using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.Helpers;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace DeviceLicenseSaleApi.Services
 {
     public class UserService : IUserService
     {
         private readonly IUserRepository _repository;
+        private readonly AppDbContext _dbContext;
 
-        public UserService(IUserRepository repository)
+        public UserService(IUserRepository repository, AppDbContext dbContext)
         {
             _repository = repository;
+            _dbContext = dbContext;
         }
 
         public IEnumerable<UserResponseDto> GetAll()
         {
-            return _repository.GetAll().Select(u => new UserResponseDto
-            {
-                Id = u.Id,
-                CompanyId = u.CompanyId,
-                BuildingId = u.BuildingId,
-                Username = u.Username,
-                Email = u.Email,
-                IsActive = u.IsActive,
-                CreatedAt = u.CreatedAt
-            });
+            return _repository.GetAll().Select(MapUser);
         }
 
-        public UserResponseDto GetById(int id)
+        public UserResponseDto? GetById(int id)
         {
-            var u = _repository.GetById(id);
-
-            if (u == null) return null;
-
-            return new UserResponseDto
-            {
-                Id = u.Id,
-                CompanyId = u.CompanyId,
-                BuildingId = u.BuildingId,
-                Username = u.Username,
-                Email = u.Email,
-                IsActive = u.IsActive,
-                CreatedAt = u.CreatedAt
-            };
+            var user = _repository.GetById(id);
+            return user == null ? null : MapUser(user);
         }
 
         public UserResponseDto Create(UserCreateDto dto)
         {
+            ValidateCompanyAndBuilding(dto.CompanyId, dto.BuildingId);
+
+            var normalizedEmail = dto.Email.Trim();
+            var normalizedUsername = dto.Username.Trim();
+
+            if (_repository.ExistsByEmail(normalizedEmail))
+            {
+                throw new InvalidOperationException("Email already exists.");
+            }
+
+            if (_repository.ExistsByUsername(normalizedUsername))
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+
             var user = new User
             {
                 CompanyId = dto.CompanyId,
                 BuildingId = dto.BuildingId,
-                Username = dto.Username,
-                Email = dto.Email,
-                PasswordHash = HashPassword(dto.Password),
+                Username = normalizedUsername,
+                Email = normalizedEmail,
+                PasswordHash = PasswordHasher.Hash(dto.Password),
+                Role = NormalizeRole(dto.Role),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
             var createdUser = _repository.Add(user);
-
-            return new UserResponseDto
-            {
-                Id = createdUser.Id,
-                CompanyId = createdUser.CompanyId,
-                BuildingId = createdUser.BuildingId,
-                Username = createdUser.Username,
-                Email = createdUser.Email,
-                IsActive = createdUser.IsActive,
-                CreatedAt = createdUser.CreatedAt
-            };
+            return MapUser(createdUser);
         }
 
         public void Update(int id, UserUpdateDto dto)
         {
             var user = _repository.GetById(id);
 
-            if (user == null) return;
+            if (user == null)
+            {
+                return;
+            }
+
+            ValidateCompanyAndBuilding(dto.CompanyId, dto.BuildingId);
+
+            var normalizedEmail = dto.Email.Trim();
+            var normalizedUsername = dto.Username.Trim();
+
+            if (!string.Equals(user.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase) &&
+                _repository.ExistsByEmail(normalizedEmail))
+            {
+                throw new InvalidOperationException("Email already exists.");
+            }
+
+            if (!string.Equals(user.Username, normalizedUsername, StringComparison.OrdinalIgnoreCase) &&
+                _repository.ExistsByUsername(normalizedUsername))
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
 
             user.CompanyId = dto.CompanyId;
             user.BuildingId = dto.BuildingId;
-            user.Email = dto.Email;
+            user.Username = normalizedUsername;
+            user.Email = normalizedEmail;
+            user.Role = NormalizeRole(dto.Role);
             user.IsActive = dto.IsActive;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -94,12 +103,54 @@ namespace DeviceLicenseSaleApi.Services
             _repository.Delete(id);
         }
 
-        private string HashPassword(string password)
+        private void ValidateCompanyAndBuilding(int companyId, int buildingId)
         {
-            using var sha256 = SHA256.Create();
-            var bytes = Encoding.UTF8.GetBytes(password);
-            var hash = sha256.ComputeHash(bytes);
-            return Convert.ToBase64String(hash);
+            if (!_dbContext.Companies.Any(x => x.Id == companyId))
+            {
+                throw new ArgumentException("Selected company does not exist.");
+            }
+
+            if (!_dbContext.Buildings.Any(x => x.Id == buildingId))
+            {
+                throw new ArgumentException("Selected building does not exist.");
+            }
+        }
+
+        private static string NormalizeRole(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+            {
+                return "User";
+            }
+
+            var normalized = role.Trim();
+
+            if (normalized.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Admin";
+            }
+
+            if (normalized.Equals("User", StringComparison.OrdinalIgnoreCase))
+            {
+                return "User";
+            }
+
+            throw new ArgumentException("Role must be either 'Admin' or 'User'.");
+        }
+
+        private static UserResponseDto MapUser(User user)
+        {
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                CompanyId = user.CompanyId,
+                BuildingId = user.BuildingId,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
+            };
         }
     }
 }

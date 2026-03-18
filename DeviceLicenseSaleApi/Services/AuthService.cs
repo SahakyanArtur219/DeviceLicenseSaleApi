@@ -1,5 +1,6 @@
-﻿using DeviceLicenseSaleApi.DTOs.Auth;
+using DeviceLicenseSaleApi.Data;
 using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.DTOs.Auth;
 using DeviceLicenseSaleApi.Helpers;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
@@ -9,12 +10,18 @@ namespace DeviceLicenseSaleApi.Services
 {
     public class AuthService : IAuthService
     {
+        private readonly AppDbContext _dbContext;
         private readonly IUserRepository _userRepository;
         private readonly IUserProfileRepository _profileRepository;
         private readonly JwtHelper _jwtHelper;
 
-        public AuthService(IUserRepository userRepository, IUserProfileRepository profileRepository, JwtHelper jwtHelper)
+        public AuthService(
+            AppDbContext dbContext,
+            IUserRepository userRepository,
+            IUserProfileRepository profileRepository,
+            JwtHelper jwtHelper)
         {
+            _dbContext = dbContext;
             _userRepository = userRepository;
             _profileRepository = profileRepository;
             _jwtHelper = jwtHelper;
@@ -22,104 +29,140 @@ namespace DeviceLicenseSaleApi.Services
 
         public AuthResponseDto Register(RegisterDto dto)
         {
-            if (_userRepository.ExistsByEmail(dto.Email))
-                throw new Exception("Email already exists");
-
-            if (_userRepository.ExistsByUsername(dto.Username))
-                throw new Exception("Username already exists");
-
-            var user = new User
+            if (!_dbContext.Companies.Any(x => x.Id == dto.CompanyId))
             {
-                CompanyId = dto.CompanyId,
-                BuildingId = dto.BuildingId,
-                Username = dto.Username,
-                Email = dto.Email,
-                PasswordHash = PasswordHasher.Hash(dto.Password),
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+                throw new ArgumentException("Selected company does not exist.");
+            }
 
-            var createdUser = _userRepository.Add(user);
-            
-            var userProfile = new UserProfile
+            if (!_dbContext.Buildings.Any(x => x.Id == dto.BuildingId))
             {
-                UserId = createdUser.Id,
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Phone = dto.Phone,
-                Address = dto.Address,
-                DateOfBirth = dto.DateOfBirth
-            };
+                throw new ArgumentException("Selected building does not exist.");
+            }
 
-            var createdProfile = _profileRepository.Add(userProfile);
+            var normalizedEmail = dto.Email.Trim();
+            var normalizedUsername = dto.Username.Trim();
 
-            var token = _jwtHelper.GenerateToken(createdUser);
-
-            return new AuthResponseDto
+            if (_userRepository.ExistsByEmail(normalizedEmail))
             {
-                Token = token,
-                User = new UserResponseDto
+                throw new InvalidOperationException("Email already exists.");
+            }
+
+            if (_userRepository.ExistsByUsername(normalizedUsername))
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+
+            using var transaction = _dbContext.Database.BeginTransaction();
+
+            try
+            {
+                var user = new User
                 {
-                    Id = createdUser.Id,
-                    CompanyId = createdUser.CompanyId,
-                    BuildingId = createdUser.BuildingId,
-                    Username = createdUser.Username,
-                    Email = createdUser.Email,
-                    IsActive = createdUser.IsActive,
-                    CreatedAt = createdUser.CreatedAt
-                },
-                Profile = new UserProfileResponseDto
+                    CompanyId = dto.CompanyId,
+                    BuildingId = dto.BuildingId,
+                    Username = normalizedUsername,
+                    Email = normalizedEmail,
+                    PasswordHash = PasswordHasher.Hash(dto.Password),
+                    Role = "User",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createdUser = _userRepository.Add(user);
+
+                var userProfile = new UserProfile
                 {
-                    Id = createdProfile.Id,
-                    UserId = createdProfile.UserId,
-                    FirstName = createdProfile.FirstName,
-                    LastName = createdProfile.LastName,
-                    Phone = createdProfile.Phone,
-                    Address = createdProfile.Address,
-                    DateOfBirth = createdProfile.DateOfBirth,
-                    CreatedAt = createdProfile.CreatedAt
-                }
-            };
+                    UserId = createdUser.Id,
+                    FirstName = dto.FirstName.Trim(),
+                    LastName = dto.LastName.Trim(),
+                    Phone = dto.Phone?.Trim() ?? string.Empty,
+                    Address = dto.Address?.Trim() ?? string.Empty,
+                    DateOfBirth = dto.DateOfBirth,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var createdProfile = _profileRepository.Add(userProfile);
+                var expiresAtUtc = _jwtHelper.GetExpirationUtc();
+                var token = _jwtHelper.GenerateToken(createdUser);
+
+                transaction.Commit();
+
+                return new AuthResponseDto
+                {
+                    Token = token,
+                    ExpiresAtUtc = expiresAtUtc,
+                    User = MapUser(createdUser),
+                    Profile = new UserProfileResponseDto
+                    {
+                        Id = createdProfile.Id,
+                        UserId = createdProfile.UserId,
+                        FirstName = createdProfile.FirstName,
+                        LastName = createdProfile.LastName,
+                        Phone = createdProfile.Phone,
+                        Address = createdProfile.Address,
+                        DateOfBirth = createdProfile.DateOfBirth,
+                        CreatedAt = createdProfile.CreatedAt
+                    }
+                };
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
 
         public AuthResponseDto Login(LoginDto dto)
         {
-            var user = _userRepository.GetByUsernameOrEmail(dto.UsernameOrEmail);
+            var user = _userRepository.GetByUsernameOrEmail(dto.UsernameOrEmail.Trim());
 
-            if (user == null)
-                throw new Exception("Invalid credentials");
+            if (user == null || !PasswordHasher.Verify(dto.Password, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Invalid credentials.");
+            }
 
-            if (!PasswordHasher.Verify(dto.Password, user.PasswordHash))
-                throw new Exception("Invalid credentials");
+            if (!user.IsActive)
+            {
+                throw new InvalidOperationException("User account is inactive.");
+            }
 
             var profile = _profileRepository.GetByUserId(user.Id);
-
+            var expiresAtUtc = _jwtHelper.GetExpirationUtc();
             var token = _jwtHelper.GenerateToken(user);
 
             return new AuthResponseDto
             {
                 Token = token,
-                User = new UserResponseDto
-                {
-                    Id = user.Id,
-                    CompanyId = user.CompanyId,
-                    BuildingId = user.BuildingId,
-                    Username = user.Username,
-                    Email = user.Email,
-                    IsActive = user.IsActive,
-                    CreatedAt = user.CreatedAt
-                },
-                Profile = profile == null ? null : new UserProfileResponseDto
-                {
-                    Id = profile.Id,
-                    UserId = profile.UserId,
-                    FirstName = profile.FirstName,
-                    LastName = profile.LastName,
-                    Phone = profile.Phone,
-                    Address = profile.Address,
-                    DateOfBirth = profile.DateOfBirth,
-                    CreatedAt = profile.CreatedAt
-                }
+                ExpiresAtUtc = expiresAtUtc,
+                User = MapUser(user),
+                Profile = profile == null
+                    ? null
+                    : new UserProfileResponseDto
+                    {
+                        Id = profile.Id,
+                        UserId = profile.UserId,
+                        FirstName = profile.FirstName,
+                        LastName = profile.LastName,
+                        Phone = profile.Phone,
+                        Address = profile.Address,
+                        DateOfBirth = profile.DateOfBirth,
+                        CreatedAt = profile.CreatedAt
+                    }
+            };
+        }
+
+        private static UserResponseDto MapUser(User user)
+        {
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                CompanyId = user.CompanyId,
+                BuildingId = user.BuildingId,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
             };
         }
     }

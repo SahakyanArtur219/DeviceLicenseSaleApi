@@ -1,8 +1,13 @@
-﻿namespace DeviceLicenseSaleApi.DTOs.Auth
+using System.ComponentModel.DataAnnotations;
+
+namespace DeviceLicenseSaleApi.DTOs.Auth
 {
     public class LoginDto
     {
-        public string UsernameOrEmail { get; set; }
-        public string Password { get; set; }
+        [Required]
+        public string UsernameOrEmail { get; set; } = string.Empty;
+
+        [Required]
+        public string Password { get; set; } = string.Empty;
     }
 }

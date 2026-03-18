@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using DeviceLicenseSaleApi.Services;
 using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceLicenseSaleApi.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -21,18 +23,19 @@ namespace DeviceLicenseSaleApi.Controllers
             return Ok(_service.GetAll());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
             var user = _service.GetById(id);
 
             if (user == null)
+            {
                 return NotFound();
+            }
 
             return Ok(user);
         }
 
-        [HttpPost]
         [HttpPost]
         public IActionResult Create([FromBody] UserCreateDto dto)
         {
@@ -41,18 +44,17 @@ namespace DeviceLicenseSaleApi.Controllers
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = createdUser.Id },
-                createdUser
-            );
+                createdUser);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public IActionResult Update(int id, [FromBody] UserUpdateDto dto)
         {
             _service.Update(id, dto);
             return Ok();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);

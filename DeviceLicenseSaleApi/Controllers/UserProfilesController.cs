@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using DeviceLicenseSaleApi.Services;
 using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace DeviceLicenseSaleApi.Controllers
 {
+    [Authorize(Policy = "AdminOnly")]
     [ApiController]
     [Route("api/[controller]")]
     public class UserProfilesController : ControllerBase
@@ -21,19 +23,27 @@ namespace DeviceLicenseSaleApi.Controllers
             return Ok(_service.GetAll());
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public IActionResult GetById(int id)
         {
             var profile = _service.GetById(id);
-            if (profile == null) return NotFound();
+            if (profile == null)
+            {
+                return NotFound();
+            }
+
             return Ok(profile);
         }
 
-        [HttpGet("by-user/{userId}")]
+        [HttpGet("by-user/{userId:int}")]
         public IActionResult GetByUserId(int userId)
         {
             var profile = _service.GetByUserId(userId);
-            if (profile == null) return NotFound();
+            if (profile == null)
+            {
+                return NotFound();
+            }
+
             return Ok(profile);
         }
 
@@ -44,14 +54,14 @@ namespace DeviceLicenseSaleApi.Controllers
             return Ok();
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id:int}")]
         public IActionResult Update(int id, [FromBody] UserProfileUpdateDto dto)
         {
             _service.Update(id, dto);
             return Ok();
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public IActionResult Delete(int id)
         {
             _service.Delete(id);
