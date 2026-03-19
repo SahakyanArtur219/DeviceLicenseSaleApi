@@ -7,6 +7,5 @@
         public string DialPlans { get; set; }
         public string ClassOfService { get; set; }
         public string TimeOfDayDialing { get; set; }
-        // Expose only fields relevant for clients
     }
 }

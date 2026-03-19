@@ -8,6 +8,5 @@
         public string SpeedDial { get; set; }
         public string PhoneBook { get; set; }
         public string Intercom { get; set; }
-        // Expose only fields relevant for clients
     }
 }

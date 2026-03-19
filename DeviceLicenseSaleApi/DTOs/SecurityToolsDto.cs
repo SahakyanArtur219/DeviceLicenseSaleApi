@@ -7,6 +7,5 @@
         public string Firewall { get; set; }
         public string SecuringCallsOnAutoAttendant { get; set; }
         public string SecuringCallRouting { get; set; }
-        // Expose only fields relevant for clients
     }
 }

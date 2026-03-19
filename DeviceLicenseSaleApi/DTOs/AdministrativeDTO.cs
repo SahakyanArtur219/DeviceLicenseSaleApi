@@ -7,6 +7,5 @@
         public string AutomaticFirmwareUpdatesForInstalledIPPhones { get; set; }
         public string AutomaticQXFirmwareUpdate { get; set; }
         public string DaylightSavingsTimeAdjustment { get; set; }
-        // Only expose the fields you want clients to see
     }
 }
