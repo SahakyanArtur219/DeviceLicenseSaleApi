@@ -39,6 +39,8 @@ namespace DeviceLicenseSaleApi
 
             builder.Services.Configure<JwtOptions>(
                 builder.Configuration.GetSection(JwtOptions.SectionName));
+            builder.Services.Configure<PayPalOptions>(
+                builder.Configuration.GetSection(PayPalOptions.SectionName));
 
             builder.Services.AddScoped<IAdministrativeRepository, AdministrativeRepository>();
             builder.Services.AddScoped<ICallAnsweringRepository, CallAnsweringRepository>();
@@ -79,6 +81,7 @@ namespace DeviceLicenseSaleApi
             builder.Services.AddScoped<ILicenseService, LicenseService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<JwtHelper>();
+            builder.Services.AddHttpClient<IPayPalService, PayPalService>();
 
             var jwtOptions = builder.Configuration
                 .GetSection(JwtOptions.SectionName)
