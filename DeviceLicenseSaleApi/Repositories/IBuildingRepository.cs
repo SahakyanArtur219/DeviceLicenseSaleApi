@@ -8,6 +8,8 @@ namespace DeviceLicenseSaleApi.Repositories
 
         Building GetById(int id);
 
+        bool Exists(int id);
+
         void Add(Building building);
 
         void Update(Building building);

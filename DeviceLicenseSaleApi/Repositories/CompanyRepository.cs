@@ -22,6 +22,11 @@ namespace DeviceLicenseSaleApi.Repositories
             return _context.Companies.Find(id);
         }
 
+        public bool Exists(int id)
+        {
+            return _context.Companies.Any(x => x.Id == id);
+        }
+
         public void Add(Company company)
         {
             _context.Companies.Add(company);

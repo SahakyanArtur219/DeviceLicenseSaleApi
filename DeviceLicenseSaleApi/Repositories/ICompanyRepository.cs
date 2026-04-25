@@ -8,6 +8,8 @@ namespace DeviceLicenseSaleApi.Repositories
 
         Company GetById(int id);
 
+        bool Exists(int id);
+
         void Add(Company company);
 
         void Update(Company company);

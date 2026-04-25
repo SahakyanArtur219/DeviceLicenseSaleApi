@@ -27,6 +27,11 @@ namespace DeviceLicenseSaleApi.Repositories
                 .FirstOrDefault(b => b.Id == id);
         }
 
+        public bool Exists(int id)
+        {
+            return _context.Buildings.Any(x => x.Id == id);
+        }
+
         public void Add(Building building)
         {
             _context.Buildings.Add(building);

@@ -1,7 +1,5 @@
-using DeviceLicenseSaleApi.Data;
 using DeviceLicenseSaleApi.DTOs;
 using DeviceLicenseSaleApi.DTOs.Auth;
-using DeviceLicenseSaleApi.Helpers;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
 using DeviceLicenseSaleApi.Services.Interfaces;
@@ -10,31 +8,40 @@ namespace DeviceLicenseSaleApi.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly AppDbContext _dbContext;
+        private readonly ICompanyRepository _companyRepository;
+        private readonly IBuildingRepository _buildingRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserProfileRepository _profileRepository;
-        private readonly JwtHelper _jwtHelper;
+        private readonly IPasswordHasher _passwordHasher;
+        private readonly IJwtTokenService _jwtTokenService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(
-            AppDbContext dbContext,
+            ICompanyRepository companyRepository,
+            IBuildingRepository buildingRepository,
             IUserRepository userRepository,
             IUserProfileRepository profileRepository,
-            JwtHelper jwtHelper)
+            IPasswordHasher passwordHasher,
+            IJwtTokenService jwtTokenService,
+            IUnitOfWork unitOfWork)
         {
-            _dbContext = dbContext;
+            _companyRepository = companyRepository;
+            _buildingRepository = buildingRepository;
             _userRepository = userRepository;
             _profileRepository = profileRepository;
-            _jwtHelper = jwtHelper;
+            _passwordHasher = passwordHasher;
+            _jwtTokenService = jwtTokenService;
+            _unitOfWork = unitOfWork;
         }
 
         public AuthResponseDto Register(RegisterDto dto)
         {
-            if (!_dbContext.Companies.Any(x => x.Id == dto.CompanyId))
+            if (!_companyRepository.Exists(dto.CompanyId))
             {
                 throw new ArgumentException("Selected company does not exist.");
             }
 
-            if (!_dbContext.Buildings.Any(x => x.Id == dto.BuildingId))
+            if (!_buildingRepository.Exists(dto.BuildingId))
             {
                 throw new ArgumentException("Selected building does not exist.");
             }
@@ -52,7 +59,7 @@ namespace DeviceLicenseSaleApi.Services
                 throw new InvalidOperationException("Username already exists.");
             }
 
-            using var transaction = _dbContext.Database.BeginTransaction();
+            using var transaction = _unitOfWork.BeginTransaction();
 
             try
             {
@@ -62,7 +69,7 @@ namespace DeviceLicenseSaleApi.Services
                     BuildingId = dto.BuildingId,
                     Username = normalizedUsername,
                     Email = normalizedEmail,
-                    PasswordHash = PasswordHasher.Hash(dto.Password),
+                    PasswordHash = _passwordHasher.Hash(dto.Password),
                     Role = "User",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
@@ -82,8 +89,8 @@ namespace DeviceLicenseSaleApi.Services
                 };
 
                 var createdProfile = _profileRepository.Add(userProfile);
-                var expiresAtUtc = _jwtHelper.GetExpirationUtc();
-                var token = _jwtHelper.GenerateToken(createdUser);
+                var expiresAtUtc = _jwtTokenService.GetExpirationUtc();
+                var token = _jwtTokenService.GenerateToken(createdUser);
 
                 transaction.Commit();
 
@@ -116,7 +123,7 @@ namespace DeviceLicenseSaleApi.Services
         {
             var user = _userRepository.GetByUsernameOrEmail(dto.UsernameOrEmail.Trim());
 
-            if (user == null || !PasswordHasher.Verify(dto.Password, user.PasswordHash))
+            if (user == null || !_passwordHasher.Verify(dto.Password, user.PasswordHash))
             {
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
@@ -127,8 +134,8 @@ namespace DeviceLicenseSaleApi.Services
             }
 
             var profile = _profileRepository.GetByUserId(user.Id);
-            var expiresAtUtc = _jwtHelper.GetExpirationUtc();
-            var token = _jwtHelper.GenerateToken(user);
+            var expiresAtUtc = _jwtTokenService.GetExpirationUtc();
+            var token = _jwtTokenService.GenerateToken(user);
 
             return new AuthResponseDto
             {

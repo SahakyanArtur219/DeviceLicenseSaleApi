@@ -1,14 +1,10 @@
 using System.Security.Claims;
 using System.Text;
+using DeviceLicenseSaleApi.Application;
 using DeviceLicenseSaleApi.Configuration;
-using DeviceLicenseSaleApi.Data;
-using DeviceLicenseSaleApi.Helpers;
-using DeviceLicenseSaleApi.Repositories;
-using DeviceLicenseSaleApi.Services;
-using DeviceLicenseSaleApi.Services.Interfaces;
+using DeviceLicenseSaleApi.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -34,54 +30,9 @@ namespace DeviceLicenseSaleApi
                 });
             });
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            builder.Services.Configure<JwtOptions>(
-                builder.Configuration.GetSection(JwtOptions.SectionName));
-            builder.Services.Configure<PayPalOptions>(
-                builder.Configuration.GetSection(PayPalOptions.SectionName));
-
-            builder.Services.AddScoped<IAdministrativeRepository, AdministrativeRepository>();
-            builder.Services.AddScoped<ICallAnsweringRepository, CallAnsweringRepository>();
-            builder.Services.AddScoped<ICallManagementRepository, CallManagementRepository>();
-            builder.Services.AddScoped<ICallScreeningRepository, CallScreeningRepository>();
-            builder.Services.AddScoped<ICostBandwidthSavingRepository, CostBandwidthSavingRepository>();
-            builder.Services.AddScoped<IGroupConvenienceRepository, GroupConvenienceRepository>();
-            builder.Services.AddScoped<ISecurityToolsRepository, SecurityToolsRepository>();
-            builder.Services.AddScoped<IUnifiedCommunicationsRepository, UnifiedCommunicationsRepository>();
-            builder.Services.AddScoped<IUtilityRepository, UtilityRepository>();
-            builder.Services.AddScoped<IFeaturesRepository, FeaturesRepository>();
-            builder.Services.AddScoped<ILicensableFeaturesRepository, LicensableFeaturesRepository>();
-            builder.Services.AddScoped<IDeviceTypesRepository, DeviceTypesRepository>();
-            builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
-            builder.Services.AddScoped<IUserRepository, UserRepository>();
-            builder.Services.AddScoped<IUserProfileRepository, UserProfileRepository>();
-            builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
-            builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
-            builder.Services.AddScoped<ILicenseRepository, LicenseRepository>();
-
-            builder.Services.AddScoped<AdministrativeService>();
-            builder.Services.AddScoped<CallAnsweringService>();
-            builder.Services.AddScoped<CallManagementService>();
-            builder.Services.AddScoped<CallScreeningService>();
-            builder.Services.AddScoped<CostBandwidthSavingService>();
-            builder.Services.AddScoped<GroupConvenienceService>();
-            builder.Services.AddScoped<SecurityToolsService>();
-            builder.Services.AddScoped<UnifiedCommunicationsService>();
-            builder.Services.AddScoped<UtilityService>();
-            builder.Services.AddScoped<FeaturesService>();
-            builder.Services.AddScoped<LicensableFeaturesService>();
-            builder.Services.AddScoped<DeviceTypesService>();
-            builder.Services.AddScoped<ICompanyService, CompanyService>();
-            builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IUserProfileService, UserProfileService>();
-            builder.Services.AddScoped<IBuildingService, BuildingService>();
-            builder.Services.AddScoped<IDeviceService, DeviceService>();
-            builder.Services.AddScoped<ILicenseService, LicenseService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<JwtHelper>();
-            builder.Services.AddHttpClient<IPayPalService, PayPalService>();
+            builder.Services
+                .AddApplicationServices()
+                .AddInfrastructureServices(builder.Configuration);
 
             var jwtOptions = builder.Configuration
                 .GetSection(JwtOptions.SectionName)

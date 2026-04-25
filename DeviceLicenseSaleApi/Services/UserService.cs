@@ -1,20 +1,27 @@
-using DeviceLicenseSaleApi.Data;
 using DeviceLicenseSaleApi.DTOs;
-using DeviceLicenseSaleApi.Helpers;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
+using DeviceLicenseSaleApi.Services.Interfaces;
 
 namespace DeviceLicenseSaleApi.Services
 {
     public class UserService : IUserService
     {
+        private readonly ICompanyRepository _companyRepository;
+        private readonly IBuildingRepository _buildingRepository;
         private readonly IUserRepository _repository;
-        private readonly AppDbContext _dbContext;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public UserService(IUserRepository repository, AppDbContext dbContext)
+        public UserService(
+            IUserRepository repository,
+            ICompanyRepository companyRepository,
+            IBuildingRepository buildingRepository,
+            IPasswordHasher passwordHasher)
         {
             _repository = repository;
-            _dbContext = dbContext;
+            _companyRepository = companyRepository;
+            _buildingRepository = buildingRepository;
+            _passwordHasher = passwordHasher;
         }
 
         public IEnumerable<UserResponseDto> GetAll()
@@ -51,7 +58,7 @@ namespace DeviceLicenseSaleApi.Services
                 BuildingId = dto.BuildingId,
                 Username = normalizedUsername,
                 Email = normalizedEmail,
-                PasswordHash = PasswordHasher.Hash(dto.Password),
+                PasswordHash = _passwordHasher.Hash(dto.Password),
                 Role = NormalizeRole(dto.Role),
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -105,12 +112,12 @@ namespace DeviceLicenseSaleApi.Services
 
         private void ValidateCompanyAndBuilding(int companyId, int buildingId)
         {
-            if (!_dbContext.Companies.Any(x => x.Id == companyId))
+            if (!_companyRepository.Exists(companyId))
             {
                 throw new ArgumentException("Selected company does not exist.");
             }
 
-            if (!_dbContext.Buildings.Any(x => x.Id == buildingId))
+            if (!_buildingRepository.Exists(buildingId))
             {
                 throw new ArgumentException("Selected building does not exist.");
             }

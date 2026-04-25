@@ -3,12 +3,13 @@ using System.Security.Claims;
 using System.Text;
 using DeviceLicenseSaleApi.Configuration;
 using DeviceLicenseSaleApi.Models;
+using DeviceLicenseSaleApi.Services.Interfaces;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DeviceLicenseSaleApi.Helpers
 {
-    public class JwtHelper
+    public class JwtHelper : IJwtTokenService
     {
         private readonly JwtOptions _options;
 

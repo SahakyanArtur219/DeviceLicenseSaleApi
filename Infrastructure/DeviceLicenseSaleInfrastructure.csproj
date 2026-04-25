@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\DeviceLicenseSaleApplication.csproj" />
+    <ProjectReference Include="..\Domain\DeviceLicenseSaleDomain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DeviceLicenseSaleApi\Configuration\*.cs" LinkBase="Configuration" />
+    <Compile Include="..\DeviceLicenseSaleApi\Data\**\*.cs" LinkBase="Data" />
+    <Compile Include="..\DeviceLicenseSaleApi\Helpers\**\*.cs" LinkBase="Helpers" />
+    <Compile Include="..\DeviceLicenseSaleApi\Repositories\*Repository.cs" LinkBase="Repositories" />
+    <Compile Remove="..\DeviceLicenseSaleApi\Repositories\I*Repository.cs" />
+    <Compile Include="..\DeviceLicenseSaleApi\Services\PayPalService.cs" LinkBase="Services" />
+  </ItemGroup>
+
+</Project>
