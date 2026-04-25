@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "sCT4ja6eZns=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\sahak\\source\\repos\\DeviceLicenseSaleApi\\src\\DeviceLicenseSaleApi.Application\\DeviceLicenseSaleApi.Application.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\sahak\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.5\\microsoft.extensions.dependencyinjection.abstractions.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}

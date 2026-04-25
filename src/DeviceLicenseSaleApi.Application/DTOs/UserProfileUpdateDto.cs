@@ -1,0 +1,15 @@
+﻿namespace DeviceLicenseSaleApi.DTOs
+{
+    public class UserProfileUpdateDto
+    {
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public string Phone { get; set; }
+
+        public string Address { get; set; }
+
+        public DateTime DateOfBirth { get; set; }
+    }
+}

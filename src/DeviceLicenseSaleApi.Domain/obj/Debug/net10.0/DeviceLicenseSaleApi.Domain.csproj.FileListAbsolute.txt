@@ -1,0 +1,12 @@
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\bin\Debug\net10.0\DeviceLicenseSaleApi.Domain.deps.json
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\bin\Debug\net10.0\DeviceLicenseSaleApi.Domain.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\bin\Debug\net10.0\DeviceLicenseSaleApi.Domain.pdb
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.AssemblyInfoInputs.cache
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.AssemblyInfo.cs
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.csproj.CoreCompileInputs.cache
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.sourcelink.json
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\refint\DeviceLicenseSaleApi.Domain.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\DeviceLicenseSaleApi.Domain.pdb
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Domain\obj\Debug\net10.0\ref\DeviceLicenseSaleApi.Domain.dll

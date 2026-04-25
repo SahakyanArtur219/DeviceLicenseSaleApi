@@ -1,0 +1,16 @@
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\bin\Debug\net10.0\DeviceLicenseSaleApi.Application.deps.json
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\bin\Debug\net10.0\DeviceLicenseSaleApi.Application.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\bin\Debug\net10.0\DeviceLicenseSaleApi.Application.pdb
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\bin\Debug\net10.0\DeviceLicenseSaleApi.Domain.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\bin\Debug\net10.0\DeviceLicenseSaleApi.Domain.pdb
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.csproj.AssemblyReference.cache
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.AssemblyInfoInputs.cache
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.AssemblyInfo.cs
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.csproj.CoreCompileInputs.cache
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.sourcelink.json
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLi.0431B6EF.Up2Date
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\refint\DeviceLicenseSaleApi.Application.dll
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\DeviceLicenseSaleApi.Application.pdb
+C:\Users\sahak\source\repos\DeviceLicenseSaleApi\src\DeviceLicenseSaleApi.Application\obj\Debug\net10.0\ref\DeviceLicenseSaleApi.Application.dll
