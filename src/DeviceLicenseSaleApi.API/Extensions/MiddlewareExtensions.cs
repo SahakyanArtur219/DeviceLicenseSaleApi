@@ -6,6 +6,7 @@ namespace DeviceLicenseSaleApi.Extensions
     {
         public static WebApplication UsePresentationMiddleware(this WebApplication app)
         {
+            app.UseMiddleware<RequestLoggingMiddleware>();
             app.UseMiddleware<ExceptionMiddleware>();
 
             if (app.Environment.IsDevelopment())

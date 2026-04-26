@@ -37,8 +37,5 @@ namespace DeviceLicenseSaleApi.DTOs.Auth
 
         [StringLength(300)]
         public string? Address { get; set; }
-
-        [Required]
-        public DateTime DateOfBirth { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using DeviceLicenseSaleApi.DTOs;
 using DeviceLicenseSaleApi.DTOs.Auth;
+using DeviceLicenseSaleApi.Logging;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
 using DeviceLicenseSaleApi.Services.Interfaces;
@@ -15,6 +16,7 @@ namespace DeviceLicenseSaleApi.Services
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtTokenService _jwtTokenService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IActivityLogger _activityLogger;
 
         public AuthService(
             ICompanyRepository companyRepository,
@@ -23,7 +25,8 @@ namespace DeviceLicenseSaleApi.Services
             IUserProfileRepository profileRepository,
             IPasswordHasher passwordHasher,
             IJwtTokenService jwtTokenService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IActivityLogger activityLogger)
         {
             _companyRepository = companyRepository;
             _buildingRepository = buildingRepository;
@@ -32,6 +35,7 @@ namespace DeviceLicenseSaleApi.Services
             _passwordHasher = passwordHasher;
             _jwtTokenService = jwtTokenService;
             _unitOfWork = unitOfWork;
+            _activityLogger = activityLogger;
         }
 
         public AuthResponseDto Register(RegisterDto dto)
@@ -84,7 +88,6 @@ namespace DeviceLicenseSaleApi.Services
                     LastName = dto.LastName.Trim(),
                     Phone = dto.Phone?.Trim() ?? string.Empty,
                     Address = dto.Address?.Trim() ?? string.Empty,
-                    DateOfBirth = dto.DateOfBirth,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -125,17 +128,51 @@ namespace DeviceLicenseSaleApi.Services
 
             if (user == null || !_passwordHasher.Verify(dto.Password, user.PasswordHash))
             {
+                _activityLogger.LogActivityAsync(new ActivityLogEntry
+                {
+                    Category = "Security",
+                    Action = "Login",
+                    Outcome = "Failed",
+                    Description = "Invalid login credentials.",
+                    Details = new Dictionary<string, object?>
+                    {
+                        ["usernameOrEmail"] = dto.UsernameOrEmail.Trim()
+                    }
+                }).GetAwaiter().GetResult();
                 throw new UnauthorizedAccessException("Invalid credentials.");
             }
 
             if (!user.IsActive)
             {
+                _activityLogger.LogActivityAsync(new ActivityLogEntry
+                {
+                    Category = "Security",
+                    Action = "Login",
+                    Outcome = "Failed",
+                    UserId = user.Id,
+                    Username = user.Username,
+                    EntityName = "User",
+                    EntityId = user.Id.ToString(),
+                    Description = "Inactive user attempted to log in."
+                }).GetAwaiter().GetResult();
                 throw new InvalidOperationException("User account is inactive.");
             }
 
             var profile = _profileRepository.GetByUserId(user.Id);
             var expiresAtUtc = _jwtTokenService.GetExpirationUtc();
             var token = _jwtTokenService.GenerateToken(user);
+
+            _activityLogger.LogActivityAsync(new ActivityLogEntry
+            {
+                Category = "Security",
+                Action = "Login",
+                Outcome = "Succeeded",
+                UserId = user.Id,
+                Username = user.Username,
+                EntityName = "User",
+                EntityId = user.Id.ToString(),
+                Description = "User logged in successfully."
+            }).GetAwaiter().GetResult();
 
             return new AuthResponseDto
             {

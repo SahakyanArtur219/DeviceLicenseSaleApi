@@ -1,6 +1,7 @@
 using DeviceLicenseSaleApi.Configuration;
 using DeviceLicenseSaleApi.Data;
 using DeviceLicenseSaleApi.Helpers;
+using DeviceLicenseSaleApi.Infrastructure.Logging;
 using DeviceLicenseSaleApi.Repositories;
 using DeviceLicenseSaleApi.Services;
 using DeviceLicenseSaleApi.Services.Interfaces;
@@ -23,6 +24,8 @@ namespace DeviceLicenseSaleApi.Infrastructure.DependencyInjection
                 configuration.GetSection(JwtOptions.SectionName));
             services.Configure<PayPalOptions>(
                 configuration.GetSection(PayPalOptions.SectionName));
+            services.Configure<ActivityLoggingOptions>(
+                configuration.GetSection(ActivityLoggingOptions.SectionName));
 
             services.AddScoped<IAdministrativeRepository, AdministrativeRepository>();
             services.AddScoped<ICallAnsweringRepository, CallAnsweringRepository>();
@@ -46,6 +49,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.DependencyInjection
             services.AddScoped<IJwtTokenService, JwtHelper>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+            services.AddSingleton<IActivityLogger, ActivityLogger>();
             services.AddHttpClient<IPayPalService, PayPalService>();
 
             return services;

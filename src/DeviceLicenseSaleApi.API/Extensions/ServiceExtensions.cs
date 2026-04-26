@@ -78,6 +78,7 @@ namespace DeviceLicenseSaleApi.Extensions
             services.AddControllers(options =>
             {
                 options.Filters.Add<ValidationFilter>();
+                options.Filters.Add<ActionAuditFilter>();
             })
             .ConfigureApiBehaviorOptions(options =>
             {
@@ -87,6 +88,7 @@ namespace DeviceLicenseSaleApi.Extensions
             services.AddEndpointsApiExplorer();
             services.AddSwaggerDocumentation();
             services.AddScoped<ValidationFilter>();
+            services.AddScoped<ActionAuditFilter>();
 
             return services;
         }

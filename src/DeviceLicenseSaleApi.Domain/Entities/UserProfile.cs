@@ -14,7 +14,7 @@
 
         public string Address { get; set; }
 
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         public DateTime? CreatedAt { get; set; }
 
