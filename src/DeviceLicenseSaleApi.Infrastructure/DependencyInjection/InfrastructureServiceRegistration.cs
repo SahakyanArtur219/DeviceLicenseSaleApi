@@ -45,6 +45,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.DependencyInjection
             services.AddScoped<IBuildingRepository, BuildingRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ILicenseRepository, LicenseRepository>();
+            services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
 
             services.AddScoped<IJwtTokenService, JwtHelper>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();

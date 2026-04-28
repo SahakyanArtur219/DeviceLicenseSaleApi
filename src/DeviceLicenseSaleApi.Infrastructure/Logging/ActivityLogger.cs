@@ -1,10 +1,13 @@
 using System.Text.Json;
 using DeviceLicenseSaleApi.Configuration;
+using DeviceLicenseSaleApi.Data;
 using DeviceLicenseSaleApi.Logging;
 using DeviceLicenseSaleApi.Services.Interfaces;
+using DeviceLicenseSaleApi.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DeviceLicenseSaleApi.Infrastructure.Logging
 {
@@ -16,15 +19,18 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
         };
 
         private readonly ILogger<ActivityLogger> _logger;
-        private readonly SemaphoreSlim _writeLock = new(1, 1);
+        private static readonly SemaphoreSlim WriteLock = new(1, 1);
         private readonly string _logDirectory;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public ActivityLogger(
             ILogger<ActivityLogger> logger,
             IHostEnvironment hostEnvironment,
+            IServiceScopeFactory scopeFactory,
             IOptions<ActivityLoggingOptions> options)
         {
             _logger = logger;
+            _scopeFactory = scopeFactory;
 
             var configuredDirectory = options.Value.Directory;
             _logDirectory = Path.IsPathRooted(configuredDirectory)
@@ -38,6 +44,8 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
         {
             try
             {
+                var timestampUtc = DateTime.UtcNow;
+
                 _logger.LogInformation(
                     "HTTP {Method} {Path} responded {StatusCode} in {DurationMs} ms. TraceId: {TraceId}, UserId: {UserId}",
                     entry.Method,
@@ -49,7 +57,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
 
                 var payload = new
                 {
-                    timestampUtc = DateTime.UtcNow,
+                    timestampUtc,
                     type = "request",
                     entry.Method,
                     entry.Path,
@@ -63,6 +71,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
                 };
 
                 await WriteEntryAsync("requests", payload, cancellationToken);
+                await SaveRequestLogAsync(timestampUtc, entry, cancellationToken);
             }
             catch (Exception exception)
             {
@@ -74,6 +83,8 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
         {
             try
             {
+                var timestampUtc = DateTime.UtcNow;
+
                 if (string.Equals(entry.Outcome, "Failed", StringComparison.OrdinalIgnoreCase))
                 {
                     _logger.LogWarning(
@@ -97,7 +108,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
 
                 var payload = new
                 {
-                    timestampUtc = DateTime.UtcNow,
+                    timestampUtc,
                     type = "activity",
                     entry.Category,
                     entry.Action,
@@ -112,6 +123,7 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
                 };
 
                 await WriteEntryAsync("activities", payload, cancellationToken);
+                await SaveActivityLogAsync(timestampUtc, entry, cancellationToken);
             }
             catch (Exception exception)
             {
@@ -124,15 +136,62 @@ namespace DeviceLicenseSaleApi.Infrastructure.Logging
             var filePath = Path.Combine(_logDirectory, $"{prefix}-{DateTime.UtcNow:yyyyMMdd}.log");
             var serialized = JsonSerializer.Serialize(payload, SerializerOptions);
 
-            await _writeLock.WaitAsync(cancellationToken);
+            await WriteLock.WaitAsync(cancellationToken);
             try
             {
                 await File.AppendAllTextAsync(filePath, serialized + Environment.NewLine, cancellationToken);
             }
             finally
             {
-                _writeLock.Release();
+                WriteLock.Release();
             }
+        }
+
+        private async Task SaveRequestLogAsync(DateTime timestampUtc, RequestLogEntry entry, CancellationToken cancellationToken)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            dbContext.RequestLogs.Add(new RequestLog
+            {
+                TimestampUtc = timestampUtc,
+                Method = entry.Method,
+                Path = entry.Path,
+                QueryString = entry.QueryString,
+                StatusCode = entry.StatusCode,
+                DurationMs = entry.DurationMs,
+                RemoteIpAddress = entry.RemoteIpAddress,
+                UserId = entry.UserId,
+                Username = entry.Username,
+                TraceId = entry.TraceId
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        private async Task SaveActivityLogAsync(DateTime timestampUtc, ActivityLogEntry entry, CancellationToken cancellationToken)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            dbContext.ActivityLogs.Add(new ActivityLog
+            {
+                TimestampUtc = timestampUtc,
+                Category = entry.Category,
+                Action = entry.Action,
+                Outcome = entry.Outcome,
+                UserId = entry.UserId,
+                Username = entry.Username,
+                EntityName = entry.EntityName,
+                EntityId = entry.EntityId,
+                Description = entry.Description,
+                TraceId = entry.TraceId,
+                DetailsJson = entry.Details == null
+                    ? null
+                    : JsonSerializer.Serialize(entry.Details, SerializerOptions)
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
     }
 }

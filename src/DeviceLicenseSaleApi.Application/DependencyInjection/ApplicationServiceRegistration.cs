@@ -27,6 +27,7 @@ namespace DeviceLicenseSaleApi.Application.DependencyInjection
             services.AddScoped<IDeviceService, DeviceService>();
             services.AddScoped<ILicenseService, LicenseService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IActivityLogService, ActivityLogService>();
 
             return services;
         }

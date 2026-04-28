@@ -26,10 +26,14 @@ namespace DeviceLicenseSaleApi.Data
         public DbSet<UserProfile> UserProfiles { get; set; }
         public DbSet<Device> Devices { get; set; }
         public DbSet<License> Licenses { get; set; }
+        public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<RequestLog> RequestLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyConfiguration(new ActivityLogConfiguration());
+            modelBuilder.ApplyConfiguration(new RequestLogConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
         }
