@@ -10,6 +10,7 @@ namespace DeviceLicenseSaleApi.Models
         public string PasswordHash { get; set; } = string.Empty;
         public string Role { get; set; } = "User";
         public bool IsActive { get; set; } = true;
+        public int RewardPoints { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public Company? Company { get; set; }

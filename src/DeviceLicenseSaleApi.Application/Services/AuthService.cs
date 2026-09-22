@@ -76,6 +76,7 @@ namespace DeviceLicenseSaleApi.Services
                     PasswordHash = _passwordHasher.Hash(dto.Password),
                     Role = "User",
                     IsActive = true,
+                    RewardPoints = 0,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -206,6 +207,7 @@ namespace DeviceLicenseSaleApi.Services
                 Email = user.Email,
                 Role = user.Role,
                 IsActive = user.IsActive,
+                RewardPoints = user.RewardPoints,
                 CreatedAt = user.CreatedAt
             };
         }

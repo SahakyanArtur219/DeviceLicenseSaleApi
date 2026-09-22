@@ -28,6 +28,8 @@ namespace DeviceLicenseSaleApi.Data
         public DbSet<License> Licenses { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<RequestLog> RequestLogs { get; set; }
+        public DbSet<WeeklyBundle> WeeklyBundles { get; set; }
+        public DbSet<WeeklyBundleFeature> WeeklyBundleFeatures { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -36,6 +38,9 @@ namespace DeviceLicenseSaleApi.Data
             modelBuilder.ApplyConfiguration(new RequestLogConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
+            modelBuilder.ApplyConfiguration(new DeviceConfiguration());
+            modelBuilder.ApplyConfiguration(new WeeklyBundleConfiguration());
+            modelBuilder.ApplyConfiguration(new WeeklyBundleFeatureConfiguration());
         }
     }
 }

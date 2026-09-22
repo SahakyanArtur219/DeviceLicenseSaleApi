@@ -7,3 +7,7 @@
 /DeviceLicenseSaleApi/bin/Debug
 /.vs
 /DeviceLicenseSaleApi/obj
+/src/DeviceLicenseSaleApi.API/.dotnet/sdk-advertising/10.0.200/microsoft.net.workloads/10.0.203/microsoft.net.workloads.workloadset.json
+*.json
+/src/DeviceLicenseSaleApi.API/.dotnet/sdk-advertising/10.0.200/microsoft.net.workloads/workloadVersion.txt
+/src/DeviceLicenseSaleApi.API/.dotnet/TelemetryStorageService/20260425083404_01fb78f8d3b7436ab8534b86f0d1c897.trn

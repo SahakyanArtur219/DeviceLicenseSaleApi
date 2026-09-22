@@ -1,4 +1,4 @@
-﻿using DeviceLicenseSaleApi.DTOs;
+using DeviceLicenseSaleApi.DTOs;
 using DeviceLicenseSaleApi.Models;
 using DeviceLicenseSaleApi.Repositories;
 
@@ -32,10 +32,17 @@ namespace DeviceLicenseSaleApi.Services
                 DeviceTypeId = dto.DeviceTypeId,
                 LicenseId = dto.LicenseId,
                 Name = dto.Name,
-                Location = dto.Location
+                Location = dto.Location,
+                SerialNumber = string.Empty
             };
 
             var created = _repository.Add(entity);
+            if (string.IsNullOrWhiteSpace(created.SerialNumber))
+            {
+                created.SerialNumber = $"DEV-{created.Id:000000}";
+                _repository.Update(created);
+            }
+
             return Map(created);
         }
 
@@ -71,6 +78,7 @@ namespace DeviceLicenseSaleApi.Services
                 DeviceTypeId = x.DeviceTypeId,
                 LicenseId = x.LicenseId,
                 Name = x.Name,
+                SerialNumber = x.SerialNumber,
                 Location = x.Location
             };
         }

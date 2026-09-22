@@ -25,9 +25,12 @@ namespace DeviceLicenseSaleApi.Application.DependencyInjection
             services.AddScoped<IUserProfileService, UserProfileService>();
             services.AddScoped<IBuildingService, BuildingService>();
             services.AddScoped<IDeviceService, DeviceService>();
+            services.AddScoped<IDeviceRecommendationService, DeviceRecommendationService>();
             services.AddScoped<ILicenseService, LicenseService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IActivityLogService, ActivityLogService>();
+            services.AddScoped<IPurchasePricingService, PurchasePricingService>();
+            services.AddScoped<IWeeklyBundleService, WeeklyBundleService>();
 
             return services;
         }

@@ -17,13 +17,20 @@ namespace DeviceLicenseSaleApi.Controllers
         private readonly IDeviceService _deviceService;
         private readonly ILicenseService _licenseService;
         private readonly IActivityLogger _activityLogger;
+        private readonly IPurchasePricingService _purchasePricingService;
 
-        public PaymentsController(IPayPalService payPalService, IDeviceService deviceService, ILicenseService licenseService, IActivityLogger activityLogger)
+        public PaymentsController(
+            IPayPalService payPalService,
+            IDeviceService deviceService,
+            ILicenseService licenseService,
+            IActivityLogger activityLogger,
+            IPurchasePricingService purchasePricingService)
         {
             _payPalService = payPalService;
             _deviceService = deviceService;
             _licenseService = licenseService;
             _activityLogger = activityLogger;
+            _purchasePricingService = purchasePricingService;
         }
 
         [HttpGet("config")]
@@ -39,6 +46,21 @@ namespace DeviceLicenseSaleApi.Controllers
             }
         }
 
+        [HttpPost("quote")]
+        public IActionResult Quote([FromBody] PayPalCreateOrderRequestDto dto)
+        {
+            var userId = GetCurrentUserId();
+            var device = _deviceService.GetByIdForUser(dto.DeviceId, userId);
+
+            if (device == null)
+            {
+                return NotFound(new { message = "Device not found." });
+            }
+
+            var quote = _purchasePricingService.BuildQuote(userId, dto.DeviceTypeId, dto.LineItems, dto.PointsToRedeem);
+            return Ok(quote);
+        }
+
         [HttpPost("orders")]
         public async Task<IActionResult> CreateOrder([FromBody] PayPalCreateOrderRequestDto dto, CancellationToken cancellationToken)
         {
@@ -52,14 +74,16 @@ namespace DeviceLicenseSaleApi.Controllers
                 return NotFound(new { message = "Device not found." });
             }
 
-            if (dto.Amount <= 0)
-            {
-                await LogPaymentActivityAsync("CreatePayPalOrder", "Failed", userId, username, dto.DeviceId.ToString(), "Order creation rejected because amount was not greater than zero.");
-                return BadRequest(new { message = "Checkout total must be greater than zero." });
-            }
-
             try
             {
+                var quote = _purchasePricingService.BuildQuote(userId, dto.DeviceTypeId, dto.LineItems, dto.PointsToRedeem);
+                if (quote.Total <= 0)
+                {
+                    await LogPaymentActivityAsync("CreatePayPalOrder", "Failed", userId, username, dto.DeviceId.ToString(), "Order creation rejected because amount was not greater than zero.");
+                    return BadRequest(new { message = "Checkout total must be greater than zero after discounts." });
+                }
+
+                dto.Amount = quote.Total;
                 var order = await _payPalService.CreateOrderAsync(dto, cancellationToken);
                 await LogPaymentActivityAsync(
                     "CreatePayPalOrder",
@@ -71,10 +95,17 @@ namespace DeviceLicenseSaleApi.Controllers
                     new Dictionary<string, object?>
                     {
                         ["orderId"] = order.Id,
-                        ["amount"] = dto.Amount,
-                        ["currencyCode"] = dto.CurrencyCode
+                        ["amount"] = quote.Total,
+                        ["currencyCode"] = dto.CurrencyCode,
+                        ["pointsRedeemed"] = quote.PointsRedeemed,
+                        ["bundleDiscountAmount"] = quote.BundleDiscountAmount
                     });
-                return Ok(order);
+                return Ok(new
+                {
+                    order.Id,
+                    order.Status,
+                    Quote = quote
+                });
             }
             catch (InvalidOperationException ex)
             {
@@ -103,6 +134,7 @@ namespace DeviceLicenseSaleApi.Controllers
 
             try
             {
+                var quote = _purchasePricingService.BuildQuote(userId, dto.DeviceTypeId, dto.LineItems, dto.PointsToRedeem);
                 var capture = await _payPalService.CaptureOrderAsync(orderId, cancellationToken);
 
                 if (!string.Equals(capture.Status, "COMPLETED", StringComparison.OrdinalIgnoreCase))
@@ -133,18 +165,24 @@ namespace DeviceLicenseSaleApi.Controllers
                     return NotFound(new { message = "Device could not be updated after payment." });
                 }
 
+                var rewardPointsBalance = _purchasePricingService.FinalizeRewardPoints(userId, quote);
+
                 await LogPaymentActivityAsync(
                     "CapturePayPalOrder",
                     "Succeeded",
                     userId,
                     username,
                     dto.DeviceId.ToString(),
-                    "PayPal payment captured and license assigned successfully.",
+                    "PayPal payment captured, reward points updated, and license assigned successfully.",
                     new Dictionary<string, object?>
                     {
                         ["orderId"] = capture.OrderId,
                         ["captureId"] = capture.CaptureId,
-                        ["licenseId"] = createdLicense.Id
+                        ["licenseId"] = createdLicense.Id,
+                        ["pointsRedeemed"] = quote.PointsRedeemed,
+                        ["pointsEarned"] = quote.PointsEarned,
+                        ["bundleDiscountAmount"] = quote.BundleDiscountAmount,
+                        ["chargedAmount"] = quote.Total
                     });
 
                 return Ok(new
@@ -154,7 +192,12 @@ namespace DeviceLicenseSaleApi.Controllers
                     capture.Status,
                     capture.PayerEmail,
                     LicenseId = createdLicense.Id,
-                    DeviceId = dto.DeviceId
+                    DeviceId = dto.DeviceId,
+                    ChargedAmount = quote.Total,
+                    BundleDiscountAmount = quote.BundleDiscountAmount,
+                    PointsRedeemed = quote.PointsRedeemed,
+                    PointsEarned = quote.PointsEarned,
+                    RewardPointsBalance = rewardPointsBalance
                 });
             }
             catch (InvalidOperationException ex)

@@ -30,6 +30,9 @@ namespace DeviceLicenseSaleApi.Infrastructure.Persistence.Configurations
 
             entity.Property(x => x.IsActive)
                 .HasDefaultValue(true);
+
+            entity.Property(x => x.RewardPoints)
+                .HasDefaultValue(0);
         }
     }
 }

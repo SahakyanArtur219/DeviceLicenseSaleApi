@@ -1,4 +1,4 @@
-﻿namespace DeviceLicenseSaleApi.Models
+namespace DeviceLicenseSaleApi.Models
 {
     public class Device
     {
@@ -9,6 +9,7 @@
         public int? LicenseId { get; set; }
 
         public string Name { get; set; }
+        public string SerialNumber { get; set; } = string.Empty;
         public string Location { get; set; }
 
         public User User { get; set; }
